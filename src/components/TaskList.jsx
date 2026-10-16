@@ -5,7 +5,9 @@ function TaskList({
   title = "Listado de tareas", 
   tareas = [], 
   cargando = false, 
-  error = null 
+  error = null,
+  onEliminarTask,
+  onToggleStatus,
 }) {
   return (
     <section className="card">
@@ -42,7 +44,10 @@ function TaskList({
             return (
               <TaskItem 
                 key={key} 
-                task={task} 
+                tarea={task}
+                task={task}
+                onToggleStatus={onToggleStatus} 
+                onDeleteTask={onEliminarTask}     
               />
             );
           })}

@@ -11,7 +11,7 @@ const TaskFilters = ({ filtro = "todas", onCambiarFiltro, busqueda = "", onCambi
           placeholder="Buscar tarea por título..."
           value={busqueda}
           onChange={(e) => onCambiarBusqueda(e.target.value)}
-          style={{ width: "100%", boxSizing: "border-box" }}
+          style={{ width: "100%", boxSizing: "border-box", fontSize: "1rem", padding: "8px"}}
         />
       </div>
 
