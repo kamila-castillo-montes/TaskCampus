@@ -1,32 +1,55 @@
-const tasks = ['Aprender qué es React', 'Crear proyecto con Vite', 'Practicar JSX']
-function showTask(taskName) {
-    alert(`Has seleccionado la tarea: ${taskName}`)
-  }
-function TaskList() {
-    return (
+
+import TaskItem from './TaskItem';
+
+function TaskList({ 
+  title = "Listado de tareas", 
+  tareas = [], 
+  cargando = false, 
+  error = null 
+}) {
+  return (
     <section className="card">
-      <h2 className="section-title">Listado de tareas</h2>
-      <ul className="task-list">
-          <li className="task-item">
-            {tasks[0]} 
-            <button onClick={() => showTask(tasks[0])} className="task-button">
-                Seleccionar
-            </button>          
-          </li>
-          <li className="task-item">
-            {tasks[1]} 
-            <button onClick={() => showTask(tasks[1])} className="task-button">
-                Seleccionar
-            </button>          
-          </li>
-          <li className="task-item">
-            {tasks[2]} 
-            <button onClick={() => showTask(tasks[2])} className="task-button">
-                Seleccionar
-            </button>          
-          </li>          
-      </ul>
+      <h2 className="section-title">{title}</h2>
+
+      {/* 1. ESTADO DE CARGA*/}
+      {cargando && (
+        <div className="task-status loading" role="status">
+          <p>Cargando tareas...</p>
+        </div>
+      )}
+
+      {/* 2. ESTADO DE ERROR */}
+      {!cargando && error && (
+        <div className="task-status error" role="alert">
+          <p>Error al cargar las tareas: {error}</p>
+        </div>
+      )}
+
+      {/* 3. ESTADO VACÍO: Cuando no hay tareas registradas o no coinciden con filtros */}
+      {!cargando && !error && tareas.length === 0 && (
+        <div className="task-status empty">
+          <p>No hay tareas disponibles en este momento.</p>
+        </div>
+      )}
+
+      {/* 4. RENDERIZADO DINÁMICO: Itera sobre el array sin mutaciones */}
+      {!cargando && !error && tareas.length > 0 && (
+        <ul className="task-list">
+          {tareas.map((task, index) => {
+            // Clave única estable: usamos task.id si es objeto, o fallback a index
+            const key = (typeof task === 'object' && task?.id) ? task.id : index;
+
+            return (
+              <TaskItem 
+                key={key} 
+                task={task} 
+              />
+            );
+          })}
+        </ul>
+      )}
     </section>
-  )
+  );
 }
-export default TaskList
+
+export default TaskList;
