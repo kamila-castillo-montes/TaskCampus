@@ -4,7 +4,8 @@ import Header from "./components/Header";
 import TaskSummary from "./components/TaskSummary";
 import TaskList from "./components/TaskList";
 import TaskFilters from "./components/TaskFilter";
-import { getTareas, putTarea, deleteTarea } from "./services/TaskService";
+import { getTareas, postTarea, putTarea, deleteTarea } from "./services/TaskService";
+import TaskForm from "./TaskForm";
 
 function App() {
   const [filtro, setFiltro] = useState("todas");
@@ -104,6 +105,14 @@ function App() {
         onCambiarFiltro={setFiltro}
         busqueda={busqueda}
         onCambiarBusqueda={setBusqueda}
+      />
+
+      <TaskForm
+        onSubmit={async (nuevaTarea) => {
+          const tareaCreada = await postTarea(nuevaTarea);
+
+          setTareas((prev) => [tareaCreada, ...prev]);
+        }}
       />
 
       <TaskList
