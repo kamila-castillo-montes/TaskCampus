@@ -32,10 +32,11 @@ export const postTarea = async (nuevaTarea) => {
     throw new Error(`Error HTTP: ${res.status} al crear tarea`);
   }
 
-  const datos = await res.json();
+  await res.json();
 
   return {
-    id: datos.id,
+    id: `local-${crypto.randomUUID()}`,
+    local: true,
     titulo: nuevaTarea.title,
     completada: false,
     prioridad: nuevaTarea.priority,
