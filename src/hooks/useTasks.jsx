@@ -92,16 +92,32 @@ export const useTasks = () => {
   );
 
   const clearError = useCallback(() => setError(null), []);
+  const TAREAS_CAMPUS_ES = [
+  "Configurar entorno del proyecto con Vite y React",
+  "Implementar custom hook useTasks para gestión de estado",
+  "Corregir reglas de estilo y formato en ESLint",
+  "Integrar consumo de datos desde API externa",
+  "Resolver conflictos de fusión en el repositorio de GitHub",
+  "Diseñar interfaz de tarjetas y etiquetas de prioridad",
+  "Redactar documentación técnica en el archivo README.md",
+  "Validar compilación limpia mediante npm run build",
+  "Ejecutar pruebas funcionales de creación y eliminación",
+  "Preparar presentación final del sprint con el equipo"
+];
 
-  const loadInitialTasks = useCallback(async () => {
+const loadInitialTasks = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const data = await fetchInitialFromApi();
       const firstTen = Array.isArray(data) ? data.slice(0, 10) : [];
-      const normalized = firstTen.map((item) =>
-        createTaskEntity(item, { isFromPost: false })
-      );
+      const normalized = firstTen.map((item, index) => {
+        const entity = createTaskEntity(item, { isFromPost: false });
+        return {
+          ...entity,
+          title: TAREAS_CAMPUS_ES[index] || entity.title,
+        };
+      });
       setTasks(() => [...normalized]);
     } catch (err) {
       setError(err.message || 'Error al cargar las tareas iniciales.');
@@ -109,7 +125,6 @@ export const useTasks = () => {
       setLoading(false);
     }
   }, []);
-
   useEffect(() => {
     loadInitialTasks();
   }, [loadInitialTasks]);
