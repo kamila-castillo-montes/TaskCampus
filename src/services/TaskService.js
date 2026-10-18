@@ -17,20 +17,32 @@ export const getTareas = async (limite = 10) => {
   }));
 };
 
-export const postTarea = async (titulo) => {
+export const postTarea = async (nuevaTarea) => {
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      title: titulo,
+      title: nuevaTarea.title,
       completed: false,
       userId: 1
     })
   });
+
   if (!res.ok) {
     throw new Error(`Error HTTP: ${res.status} al crear tarea`);
   }
-  return await res.json();
+
+  await res.json();
+
+  return {
+    id: `local-${crypto.randomUUID()}`,
+    local: true,
+    titulo: nuevaTarea.title,
+    completada: false,
+    prioridad: nuevaTarea.priority,
+    descripcion: nuevaTarea.description || "Sin descripción",
+    fechaEntrega: nuevaTarea.dueDate
+  };
 };
 
 export const putTarea = async (id, cambios) => {

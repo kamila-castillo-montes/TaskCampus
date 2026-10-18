@@ -4,7 +4,8 @@ import Header from "./components/Header";
 import TaskSummary from "./components/TaskSummary";
 import TaskList from "./components/TaskList";
 import TaskFilters from "./components/TaskFilter";
-import { getTareas, putTarea, deleteTarea } from "./services/TaskService";
+import { getTareas, postTarea, putTarea, deleteTarea } from "./services/TaskService";
+import TaskForm from "./TaskForm";
 
 function App() {
   const [filtro, setFiltro] = useState("todas");
@@ -57,30 +58,48 @@ function App() {
 
   const handleToggleStatus = async (id) => {
     const tareaActual = tareas.find((t) => t.id === id);
+
     if (!tareaActual) return;
 
     const nuevoEstado = !tareaActual.completada;
 
-
     setTareas((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completada: nuevoEstado } : t))
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, completada: nuevoEstado }
+          : t
+      )
     );
+
+    if (tareaActual.local) return;
 
     try {
       await putTarea(id, { completed: nuevoEstado });
     } catch (err) {
-      console.error("Error al actualizar estado en el servidor:", err.message);
+      console.error(
+        "Error al actualizar estado en el servidor:",
+        err.message
+      );
     }
   };
 
   
   const handleEliminarTask = async (id) => {
+    const tareaAEliminar = tareas.find((t) => t.id === id);
+
+    if (!tareaAEliminar) return;
+
     setTareas((prev) => prev.filter((t) => t.id !== id));
+
+    if (tareaAEliminar.local) return;
 
     try {
       await deleteTarea(id);
     } catch (err) {
-      console.error("Error al eliminar en el servidor:", err.message);
+      console.error(
+        "Error al eliminar en el servidor:",
+        err.message
+      );
     }
   };
 
@@ -104,6 +123,14 @@ function App() {
         onCambiarFiltro={setFiltro}
         busqueda={busqueda}
         onCambiarBusqueda={setBusqueda}
+      />
+
+      <TaskForm
+        onSubmit={async (nuevaTarea) => {
+          const tareaCreada = await postTarea(nuevaTarea);
+
+          setTareas((prev) => [tareaCreada, ...prev]);
+        }}
       />
 
       <TaskList
