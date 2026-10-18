@@ -1,61 +1,89 @@
-import {useState} from 'react'
-import './App.css'
-import Header from './components/Header'
-import TaskSummary from './components/TaskSummary'
-import TaskList from './components/TaskList'
-import TaskFilters from './components/TaskFilter.jsx'
+import { useState, useEffect } from "react";
+import "./App.css";
+import Header from "./components/Header";
+import TaskSummary from "./components/TaskSummary";
+import TaskList from "./components/TaskList";
+import TaskFilters from "./components/TaskFilter";
+import { getTareas, putTarea, deleteTarea } from "./services/TaskService";
 
 function App() {
-
   const [filtro, setFiltro] = useState("todas");
   const [busqueda, setBusqueda] = useState("");
-  
-  const [tareas, setTareas] = useState([
-    { 
-      id: 1, 
-      titulo: "Aprender React", 
-      completada: true, 
-      prioridad: "alta",
-      descripcion: "Revisar los hooks useState y useEffect en TaskCampus",
-      fechaEntrega: "18 Octubre"
-    }, 
-    { 
-      id: 2, 
-      titulo: "Hacer buenas tareas", 
-      completada: false, 
-      prioridad: "media",
-      descripcion: "Completar la lógica de filtros y métricas",
-      fechaEntrega: "20 Octubre"
-    }
-  ]);
+  const [tareas, setTareas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState(null);
 
+  
+  const cargarDatos = async () => {
+    setCargando(true);
+    setError(null);
+    try {
+      const data = await getTareas(10);
+      setTareas(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarDatos();
+  }, []);
+
+  
+  useEffect(() => {
+    const pendientesCount = tareas.filter((t) => !t.completada).length;
+    document.title = `TaskCampus (${pendientesCount} pendientes)`;
+  }, [tareas]);
+
+  
   const total = tareas.length;
   const completadas = tareas.filter((t) => t.completada).length;
   const pendientes = tareas.filter((t) => !t.completada).length;
 
   const tareasFiltradas = tareas.filter((t) => {
-    const coincideE = 
+    const coincideEstado =
       filtro === "todas" ? true :
       filtro === "pendientes" ? !t.completada :
       filtro === "completadas" ? t.completada : true;
 
-    const textoTitulo = t.titulo || t.nombre || "";
-    const coincideT = textoTitulo.toLowerCase().includes(busqueda.toLowerCase().trim());
+    const textoTitulo = t.titulo || t.title || "";
+    const coincideTexto = textoTitulo.toLowerCase().includes(busqueda.toLowerCase().trim());
 
-    return coincideE && coincideT;
+    return coincideEstado && coincideTexto;
   });
 
-  const handleToggleStatus = (id) => {
-    setTareas(
-      tareas.map((t) => 
-        t.id === id ? { ...t, completada: !t.completada } : t
-      )
+
+  const handleToggleStatus = async (id) => {
+    const tareaActual = tareas.find((t) => t.id === id);
+    if (!tareaActual) return;
+
+    const nuevoEstado = !tareaActual.completada;
+
+
+    setTareas((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, completada: nuevoEstado } : t))
     );
+
+    try {
+      await putTarea(id, { completed: nuevoEstado });
+    } catch (err) {
+      console.error("Error al actualizar estado en el servidor:", err.message);
+    }
   };
 
-  const handleEliminarTask = (id) => {
-    setTareas(tareas.filter((t) => t.id !== id));
+  
+  const handleEliminarTask = async (id) => {
+    setTareas((prev) => prev.filter((t) => t.id !== id));
+
+    try {
+      await deleteTarea(id);
+    } catch (err) {
+      console.error("Error al eliminar en el servidor:", err.message);
+    }
   };
+
   return (
     <div className="app-container">
       <Header
@@ -63,11 +91,7 @@ function App() {
         description="Gestor de tareas académicas"
       />
 
-      {/*  Se usa encadenamiento opcional.
-        Si tareas no está listo, envía 0 en vez de intentar leer tareas.length sobre undefined.
-      */}
-
-      <TaskSummary 
+      <TaskSummary
         total={total}
         completadas={completadas}
         pendientes={pendientes}
@@ -75,20 +99,23 @@ function App() {
         filtroActual={filtro}
       />
 
-      <TaskFilters 
+      <TaskFilters
         filtro={filtro}
         onCambiarFiltro={setFiltro}
         busqueda={busqueda}
-        onCambiarBusqueda={setBusqueda} />
-      
-      <TaskList 
-        title="Listado de tareas de hoy" 
-        tareas={tareasFiltradas} 
-        onToggleStatus={handleToggleStatus} 
-        onDeleteTask={handleEliminarTask}
+        onCambiarBusqueda={setBusqueda}
+      />
+
+      <TaskList
+        title="Listado de tareas de hoy"
+        tareas={tareasFiltradas}
+        cargando={cargando}
+        error={error}
+        onToggleStatus={handleToggleStatus}
+        onEliminarTask={handleEliminarTask}
       />
     </div>
   );
-};
+}
 
-export default App
+export default App;
